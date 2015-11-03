@@ -1,0 +1,3 @@
+INDEX VERSION 1.127+C:\Users\TI-Student\Documents\Informatik3\Informatik3\Java-Control\.metadata\.plugins\org.eclipse.jdt.core
+4282262597.index
+2142348700.index
