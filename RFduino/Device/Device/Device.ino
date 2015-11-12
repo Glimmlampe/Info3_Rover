@@ -27,10 +27,10 @@ void loop()
 
 	int h = Serial.available();							//Erfassung des belegten Buffers
 
-	if (1 < h < 5)										//Sollte der Buffer nur zum Teil befüllt worden sein wir dieser hier gelöscht
+	if (1 < h < 5)									//Sollte der Buffer nur zum Teil befüllt worden sein wir dieser hier gelöscht
 	{
-		int h1 = h;										//löschen tritt ein wenn sich die länge des Buffers nicht innerhalb
-		delay(100);										//von 100ms
+		int h1 = h;								//löschen tritt ein wenn sich die länge des Buffers nicht innerhalb
+		delay(100);								//von 100ms
 		if (Serial.available() < 5)
 		{
 			if (Serial.available() == h1)
@@ -60,7 +60,7 @@ void loop()
 			Data[i] = Serial.read();					//Auslesen des Buffers und schreiben
 		}
 
-		Serial.print("I recieved: ");					//gibt den empfangen String aus
+		Serial.print("I recieved: ");						//gibt den empfangen String aus
 		Serial.println(Data);
 
 		packet.rate=0;
@@ -78,7 +78,7 @@ void loop()
 		Serial.println(packet.angular);
 		Serial.println(packet.period);
 
-		//memset(Data, 0, sizeof(Data));                         //leeren des Einlese-Strings
+		memset(Data, 0, sizeof(Data));                         //leeren des Einlese-Strings
 	}
 }
 
