@@ -1,4 +1,8 @@
-/* rate in %, angulat in °, period in ms */
+/***************************************************************
+/** Rechnet lesbare Werte in Steuerungsbefehle um
+/** rate in %, angulat in °, period in ms 
+****************************************************************/
+
 void distributor(int rate, int angular, int period)
 {
 	Serial.print("subFunction rate:  ");
@@ -8,101 +12,119 @@ void distributor(int rate, int angular, int period)
 	Serial.print("subFunction period:  ");
 	Serial.println(period);
 	
-	
-	if (rate == 0 && angular == 0) 				/*HALT*/
-	{
+	//********************************************************************************
+	//Pause
+	//********************************************************************************
+	if (rate == 0 && angular == 0)
 		allStop();
-	}
 	//********************************************************************************
 	//Geschwindigkeit
 	//********************************************************************************
-	else if (rate < 0 && period != 0)			/*BACKWARDS*/
-	{                  
-		Serial.println("Rueckwaerts");
-		int incoBack = rate * (-1);  
-		if(incoBack)
-			incoBack = constrain(map(incoBack, 1, 100, 60, 250),0, 250);	// % -> PWM, max 250, not 255 for safety reasons
-    /*	map(VARIABLE, lowEntryVal, highEntryVal, lowDestVal, highDestVal) 
-	*	constrain(VARIABLE, lowestVal, HighestVal)
-	*/
-    
-		Serial.print("Rate: ");
-		Serial.println(incoBack);
-
-		//period = period * 900;						// Dauer in ms
-		backward(incoBack, period);					// Funktion fuer Fahrbefehl
-		Serial.println("Abgeschlossen");
-	}else if (rate > 0 && period != 0) 			/*FOREWARD*/
-	{
-		Serial.println("Vorwaerts");
-		
-		int incoFore=rate;
-		if(incoFore){
-			incoFore = constrain(map(incoFore, 1, 100, 60, 250),0, 250);
-		}
-    
-		Serial.print("Rate: ");
-		Serial.println(incoFore);
-
-		//period = period * 900;						// Dauer in ms
-		forward(rate, period);						// Funktion fuer Fahrbefehl
-		Serial.println("Abgeschlossen");
-	}
+	else if (rate != 0 && period > 0)
+		move(rate, period);
 	//*********************************************************************************
 	//Winkel
 	//*********************************************************************************
-	else if (angular < 0)					/*CURVE RIGHT*/
+	else if(angular != 0)
+		turn(angular);
+	//********************************************************************************
+	//Fehler
+	//********************************************************************************
+	else
+		Serial.println("Some mixed up values");
+	
+	busy = false;
+}
+
+void move(int rate, int period)
+{
+	int incoMov;
+	if(rate > 0)
+	{
+		Serial.print("Vorwaerts: ");
+    Serial.println(rate);
+    
+		incoMov = rate;  
+		incoMov = constrain(map(incoMov, 1, 100, 100, 250),0, 250);	// % -> PWM, max 250, not 255 for safety reasons
+
+    Serial.print(" ");
+    Serial.println(incoMov);
+    
+		backward(incoMov, period);					// Funktion fuer Fahrbefehl
+	}else if(rate < 0 )
+	{
+		Serial.print("Rueckwaerts");
+    Serial.println(rate);
+    
+		incoMov = rate * (-1);
+		incoMov = constrain(map(incoMov, 1, 100, 100, 250),0, 250);	// % -> PWM, max 250, not 255 for safety reasons
+
+    Serial.print(" ");
+    Serial.println(incoMov);
+    
+		forward(incoMov, period);						// Funktion fuer Fahrbefehl
+	}
+	Serial.print("Rate: ");
+	Serial.println(incoMov);
+	Serial.println("Abgeschlossen");
+}
+
+void turn(int angle)
+{
+	if (angle < 0)							/*CURVE RIGHT*/
 	{
 		Serial.println("drehe Rechts");
-		angular = angular * (-1);
+		angle = angle * (-1);
 
-		Serial.print("Angular: ");
-		Serial.println(angular);
+		Serial.print("Angle: ");
+		Serial.println(angle);
 
-		curveRight(angular);
+		curveRight(angle);
 		Serial.println("Abgeschlossen");
-	}else if (angular > 0)					/*CURVE LEFT*/
+	}else if (angle > 0)					/*CURVE LEFT*/
 	{
 		Serial.println("drehe Links");
-		angular = angular;
+		angle = angle;
 
-		Serial.print("Angular: ");
-		Serial.println(angular);
+		Serial.print("Angle: ");
+		Serial.println(angle);
 
-		curveLeft(angular);
+		curveLeft(angle);
 		Serial.println("Abgeschlossen");
 	}
-	//int k = Serial.available();
-	//Serial.print("k= ");
-	//Serial.println(k);
-	busy = false;
 }
 
 /*Funktion fuer die Vorwaersfahrt*/
 void forward(int rate, int period)
 {
-	anlauf(rate, 'f');								// sanft Anlauf
+  Serial.print("XXX rate:  ");
+  Serial.println(rate);
+  
+//	anlauf(rate, 'f');								// sanft Anlauf
 	analogWrite(AnRe1, rate);						//
 	digitalWrite(AnRe2, LOW);						// Ansteuern der H-Bruecke
 	analogWrite(AnLi1, rate);						//
 	digitalWrite(AnLi2, LOW);						//
 
 	delay(period);
-	runterfahren(rate, 'f');						// sanftes Bremsen
+//	runterfahren(rate, 'f');						// sanftes Bremsen
 	allStop();
 }
 
 /*Funktion fuer die Rueckwaertsfahrt*/
 void backward(int rate, int period)
 {
-	anlauf(rate, 'b');								// sanft Anlauf
+  Serial.print("XXX rate:  ");
+  Serial.println(rate);
+  
+//	anlauf(rate, 'b');								// sanft Anlauf
 	digitalWrite(AnRe1, LOW);						//
 	analogWrite(AnRe2, rate);						// Ansteuern der H-Bruecke
 	digitalWrite(AnLi1, LOW);						//
 	analogWrite(AnLi2, rate);						//
 
 	delay(period);
-	runterfahren(rate, 'b');						// sanftes Bremsen
+//	runterfahren(rate, 'b');						// sanftes Bremsen
 	allStop();
 }
 
@@ -112,9 +134,9 @@ void curveRight(int angular)
 	Serial.print("ich drehe um ");
 	Serial.println(angular);
 	
-	analogWrite(AnRe1, 125);
+	analogWrite(AnRe1, 180);
 	digitalWrite(AnRe2, LOW);
-	analogWrite(AnLi2, 125);
+	analogWrite(AnLi2, 180);
 	digitalWrite(AnLi1, LOW);
 	
 	int directionTime = angular * angularFactor;	// Faktor ist als globale Konstante gespeichert
@@ -128,9 +150,9 @@ void curveLeft(int angular)
 	Serial.print("ich drehe um ");
 	Serial.println(angular);
 	
-	analogWrite(AnRe2, 125);
+	analogWrite(AnRe2, 160);
 	digitalWrite(AnRe1, LOW);
-	analogWrite(AnLi1, 125);
+	analogWrite(AnLi1, 160);
 	digitalWrite(AnLi2, LOW);
 	
 	int directionTime = angular * angularFactor;	// Faktor ist als globale Konstante gespeichert
